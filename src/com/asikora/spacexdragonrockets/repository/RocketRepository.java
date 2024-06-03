@@ -4,6 +4,7 @@ import com.asikora.spacexdragonrockets.enums.RocketStatus;
 import com.asikora.spacexdragonrockets.objects.Mission;
 import com.asikora.spacexdragonrockets.objects.Rocket;
 
+import java.util.List;
 import java.util.Map;
 
 public interface RocketRepository {
@@ -18,7 +19,7 @@ public interface RocketRepository {
 
     void addMission(String name);
 
-    void assignRocketsToMission(String name, Map<String, Rocket> rockets);
+    void assignRocketsToMission(String name, List<String> rockets);
 
     Map<String, Mission> getMissions();
 

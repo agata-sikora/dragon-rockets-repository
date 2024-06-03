@@ -10,6 +10,7 @@ import com.asikora.spacexdragonrockets.objects.Rocket;
 import com.asikora.spacexdragonrockets.repository.RocketRepository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -72,7 +73,7 @@ public class DragonRocketRepository implements RocketRepository {
     }
 
     @Override
-    public void assignRocketsToMission(String name, Map<String, Rocket> rockets) {
+    public void assignRocketsToMission(String name, List<String> rockets) {
 
     }
 
