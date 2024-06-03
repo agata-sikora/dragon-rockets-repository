@@ -2,12 +2,13 @@ package com.asikora.spacexdragonrockets.objects;
 
 import com.asikora.spacexdragonrockets.enums.MissionStatus;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class Mission {
     private final String name;
-    private MissionStatus status;
-    private Map<String, Rocket> rockets;
+    private MissionStatus status = MissionStatus.SCHEDULED;
+    private Map<String, Rocket> rockets = Collections.emptyMap();
 
     public Mission(String name) {
         this.name = name;
