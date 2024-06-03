@@ -3,6 +3,7 @@ package com.asikora.spacexdragonrockets.repository.impl;
 import com.asikora.spacexdragonrockets.enums.MissionStatus;
 import com.asikora.spacexdragonrockets.enums.RocketStatus;
 import com.asikora.spacexdragonrockets.exceptions.DuplicatedNameException;
+import com.asikora.spacexdragonrockets.exceptions.ErrorMessageConstants;
 import com.asikora.spacexdragonrockets.exceptions.WrongStatusException;
 import com.asikora.spacexdragonrockets.objects.Mission;
 import com.asikora.spacexdragonrockets.objects.Rocket;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.*;
 import org.mockito.internal.util.reflection.Whitebox;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,7 +36,7 @@ class DragonRocketRepositoryTest {
         Rocket result = resultsMap.get(ROCKET_ONE_NAME);
         assertEquals(ROCKET_ONE_NAME, result.getName());
         assertEquals(RocketStatus.ON_GROUND, result.getStatus());
-        assertNull(result.getMission());
+        assertNull(result.getMissionName());
     }
 
     @Test
@@ -42,12 +44,10 @@ class DragonRocketRepositoryTest {
         // given
         RocketRepository repository = new DragonRocketRepository();
 
-        // when
+        // when then
         repository.addRocket(ROCKET_ONE_NAME);
-
-        // then
         Throwable exception = assertThrows(DuplicatedNameException.class, () -> repository.addRocket(ROCKET_ONE_NAME));
-        assertEquals("A rocket with such name already exists", exception.getMessage());
+        assertEquals(ErrorMessageConstants.ROCKET_ALREADY_EXISTS, exception.getMessage());
     }
 
     @Test
@@ -64,7 +64,7 @@ class DragonRocketRepositoryTest {
         Mission result = resultsMap.get(MISSION_ONE_NAME);
         assertEquals(MISSION_ONE_NAME, result.getName());
         assertEquals(MissionStatus.SCHEDULED, result.getStatus());
-        assertEquals(Collections.emptyMap(), result.getRockets());
+        assertEquals(Collections.emptyList(), result.getRockets());
     }
 
     @Test
@@ -77,7 +77,7 @@ class DragonRocketRepositoryTest {
 
         // then
         Throwable exception = assertThrows(DuplicatedNameException.class, () -> repository.addMission(MISSION_ONE_NAME));
-        assertEquals("A mission with such name already exists", exception.getMessage());
+        assertEquals(ErrorMessageConstants.MISSION_ALREADY_EXISTS, exception.getMessage());
     }
 
     @Test
@@ -118,12 +118,9 @@ class DragonRocketRepositoryTest {
         RocketRepository repository = new DragonRocketRepository();
         createRocketWithNoMission(repository, RocketStatus.IN_REPAIR);
 
-        // when
-        repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.IN_SPACE);
-
-        // then
+        // when then
         Throwable exception = assertThrows(WrongStatusException.class, () -> repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.IN_SPACE));
-        assertEquals("Rocket status cannot be changed to IN SPACE if it has no mission assigned", exception.getMessage());
+        assertEquals(ErrorMessageConstants.CANNOT_CHANGE_STATUS_TO_IN_SPACE, exception.getMessage());
     }
 
     @Test
@@ -146,12 +143,9 @@ class DragonRocketRepositoryTest {
         RocketRepository repository = new DragonRocketRepository();
         createRocketWithAssignedMission(repository, RocketStatus.IN_REPAIR, MissionStatus.PENDING);
 
-        // when
-        repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.ON_GROUND);
-
-        // then
+        // when then
         Throwable exception = assertThrows(WrongStatusException.class, () -> repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.ON_GROUND));
-        assertEquals("Rocket status cannot be changed to ON GROUND if it has a mission assigned", exception.getMessage());
+        assertEquals(ErrorMessageConstants.CANNOT_CHANGE_STATUS_TO_ON_GROUND, exception.getMessage());
     }
 
     private void createRocketWithAssignedMission(RocketRepository repository, RocketStatus rocketStatus, MissionStatus missionStatus) {
@@ -159,8 +153,8 @@ class DragonRocketRepositoryTest {
         rocket.setStatus(rocketStatus);
         Mission mission = new Mission(MISSION_ONE_NAME);
         mission.setStatus(missionStatus);
-        rocket.setMission(mission);
-        mission.setRockets(Map.of(ROCKET_ONE_NAME, rocket));
+        rocket.setMissionName(MISSION_ONE_NAME);
+        mission.setRockets(List.of(ROCKET_ONE_NAME));
         Map<String, Rocket> rocketsMap = Map.of(ROCKET_ONE_NAME, rocket);
         Map<String, Mission> missionMap = Map.of(MISSION_ONE_NAME, mission);
         Whitebox.setInternalState(repository, "rockets", rocketsMap);
