@@ -74,7 +74,7 @@ class DragonRocketRepositoryTest {
         repository.addMission(MISSION_ONE_NAME);
 
         // then
-        Throwable exception = assertThrows(DuplicatedNameException.class, () -> repository.addRocket(MISSION_ONE_NAME));
+        Throwable exception = assertThrows(DuplicatedNameException.class, () -> repository.addMission(MISSION_ONE_NAME));
         assertEquals("A mission with such name already exists", exception.getMessage());
     }
 
