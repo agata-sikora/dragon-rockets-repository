@@ -10,6 +10,7 @@ import org.junit.jupiter.api.*;
 import org.mockito.internal.util.reflection.Whitebox;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +36,7 @@ class DragonRocketRepositoryTest {
         Rocket result = resultsMap.get(ROCKET_ONE_NAME);
         assertEquals(ROCKET_ONE_NAME, result.getName());
         assertEquals(RocketStatus.ON_GROUND, result.getStatus());
-        assertNull(result.getMissionName());
+        assertNull(result.getMission());
     }
 
     @Test
@@ -83,11 +84,14 @@ class DragonRocketRepositoryTest {
     void shouldChangeRocketStatusToInRepairAndMissionStatusToPending() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_SPACE, MISSION_ONE_NAME);
-        createMission(repository, MissionStatus.IN_PROGRESS, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_SPACE);
+        Mission mission = createMission(repository, MissionStatus.IN_PROGRESS);
+        rocket.setMission(mission);
+        mission.addRockets(List.of(rocket));
 
         // when
-        repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
+        repository.changeRocketStatus(rocket, RocketStatus.IN_REPAIR);
 
         // then
         Rocket rocketResult = repository.getRockets().get(ROCKET_ONE_NAME);
@@ -100,11 +104,14 @@ class DragonRocketRepositoryTest {
     void shouldChangeRocketStatusToInSpaceIfItHasMission() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, MISSION_ONE_NAME);
-        createMission(repository, MissionStatus.PENDING, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
+        Mission mission = createMission(repository, MissionStatus.PENDING);
+        rocket.setMission(mission);
+        mission.addRockets(List.of(rocket));
 
         // when
-        repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.IN_SPACE);
+        repository.changeRocketStatus(rocket, RocketStatus.IN_SPACE);
 
         // then
         Rocket rocketResult = repository.getRockets().get(ROCKET_ONE_NAME);
@@ -117,10 +124,11 @@ class DragonRocketRepositoryTest {
     void shouldNotChangeRocketStatusToInSpaceIfItHasNoMission() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, null);
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
 
         // when then
-        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.IN_SPACE));
+        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.changeRocketStatus(rocket, RocketStatus.IN_SPACE));
         assertEquals(ErrorMessageConstants.CANNOT_CHANGE_STATUS_TO_IN_SPACE, exception.getMessage());
     }
 
@@ -128,10 +136,11 @@ class DragonRocketRepositoryTest {
     void shouldChangeRocketStatusToOnGroundIfItHasNoMission() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, null);
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
 
         // when
-        repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.ON_GROUND);
+        repository.changeRocketStatus(rocket, RocketStatus.ON_GROUND);
 
         // then
         Rocket rocketResult = repository.getRockets().get(ROCKET_ONE_NAME);
@@ -142,11 +151,14 @@ class DragonRocketRepositoryTest {
     void shouldNotChangeRocketStatusToOnGroundIfItHasMission() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, MISSION_ONE_NAME);
-        createMission(repository, MissionStatus.PENDING, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
+        Mission mission = createMission(repository, MissionStatus.PENDING);
+        rocket.setMission(mission);
+        mission.addRockets(List.of(rocket));
 
         // when then
-        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.changeRocketStatus(ROCKET_ONE_NAME, RocketStatus.ON_GROUND));
+        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.changeRocketStatus(rocket, RocketStatus.ON_GROUND));
         assertEquals(ErrorMessageConstants.CANNOT_CHANGE_STATUS_TO_ON_GROUND, exception.getMessage());
     }
 
@@ -154,18 +166,19 @@ class DragonRocketRepositoryTest {
     void shouldAssignMissionToRocketAndChangeStatuses() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.ON_GROUND, null);
-        createMission(repository, MissionStatus.SCHEDULED, Collections.emptyList());
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.ON_GROUND);
+        Mission mission = createMission(repository, MissionStatus.SCHEDULED);
 
         // when
-        repository.setRocketsMission(ROCKET_ONE_NAME, MISSION_ONE_NAME);
+        repository.setRocketsMission(rocket, mission);
 
         // then
         Rocket rocketResult = repository.getRockets().get(ROCKET_ONE_NAME);
         Mission missionResult = repository.getMissions().get(MISSION_ONE_NAME);
-        assertEquals(MISSION_ONE_NAME, rocketResult.getMissionName());
+        assertEquals(mission, rocketResult.getMission());
         assertEquals(RocketStatus.IN_SPACE, rocketResult.getStatus());
-        assertEquals(List.of(ROCKET_ONE_NAME), missionResult.getRockets());
+        assertEquals(List.of(rocket), missionResult.getRockets());
         assertEquals(MissionStatus.IN_PROGRESS, missionResult.getStatus());
     }
 
@@ -173,11 +186,14 @@ class DragonRocketRepositoryTest {
     void shouldNotAssignMissionToRocketIfItAlreadyHasMission() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_SPACE, MISSION_ONE_NAME);
-        createMission(repository, MissionStatus.IN_PROGRESS, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_SPACE);
+        Mission mission = createMission(repository, MissionStatus.IN_PROGRESS);
+        rocket.setMission(mission);
+        mission.addRockets(List.of(rocket));
 
         // when then
-        Throwable exception = assertThrows(AssignMissionException.class, () -> repository.setRocketsMission(ROCKET_ONE_NAME, MISSION_ONE_NAME));
+        Throwable exception = assertThrows(AssignMissionException.class, () -> repository.setRocketsMission(rocket, mission));
         assertEquals(ErrorMessageConstants.MISSION_ALREADY_ASSIGNED, exception.getMessage());
     }
 
@@ -185,11 +201,12 @@ class DragonRocketRepositoryTest {
     void shouldNotAssignMissionIfRocketIsInRepair() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, null);
-        createMission(repository, MissionStatus.SCHEDULED, Collections.emptyList());
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
+        Mission mission = createMission(repository, MissionStatus.SCHEDULED);
 
         // when then
-        Throwable exception = assertThrows(AssignMissionException.class, () -> repository.setRocketsMission(ROCKET_ONE_NAME, MISSION_ONE_NAME));
+        Throwable exception = assertThrows(AssignMissionException.class, () -> repository.setRocketsMission(rocket, mission));
         assertEquals(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR, exception.getMessage());
     }
 
@@ -197,16 +214,18 @@ class DragonRocketRepositoryTest {
     void shouldAssignRocketsToMissionAndChangeStatuses() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createTwoRockets(repository, RocketStatus.ON_GROUND, RocketStatus.ON_GROUND, null, null);
-        createMission(repository, MissionStatus.SCHEDULED, Collections.emptyList());
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket1 = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.ON_GROUND);
+        Rocket rocket2 = createRocket(repository, rocketsMap, ROCKET_TWO_NAME, RocketStatus.ON_GROUND);
+        Mission mission = createMission(repository, MissionStatus.SCHEDULED);
 
         // when
-        repository.assignRocketsToMission(MISSION_ONE_NAME, List.of(ROCKET_ONE_NAME, ROCKET_TWO_NAME));
+        repository.assignRocketsToMission(mission, List.of(rocket1, rocket2));
 
         // then
         Map<String, Rocket> rocketsResult = repository.getRockets();
         Mission missionResult = repository.getMissions().get(MISSION_ONE_NAME);
-        assertEquals(List.of(ROCKET_ONE_NAME, ROCKET_TWO_NAME), missionResult.getRockets());
+        assertEquals(List.of(rocket1, rocket2), missionResult.getRockets());
         assertEquals(MissionStatus.IN_PROGRESS, missionResult.getStatus());
         rocketsResult.values().forEach(rocket -> assertEquals(RocketStatus.IN_SPACE, rocket.getStatus()));
     }
@@ -215,11 +234,15 @@ class DragonRocketRepositoryTest {
     void shouldNotAssignRocketToMissionIfItAlreadyHasMission() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createTwoRockets(repository, RocketStatus.IN_SPACE, RocketStatus.ON_GROUND, MISSION_ONE_NAME, null);
-        createMission(repository, MissionStatus.IN_PROGRESS, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket1 = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_SPACE);
+        Rocket rocket2 = createRocket(repository, rocketsMap, ROCKET_TWO_NAME, RocketStatus.ON_GROUND);
+        Mission mission = createMission(repository, MissionStatus.IN_PROGRESS);
+        rocket1.setMission(mission);
+        mission.addRockets(List.of(rocket1));
 
         // when then
-        Throwable exception = assertThrows(AssignRocketsException.class, () -> repository.assignRocketsToMission(MISSION_ONE_NAME, List.of(ROCKET_ONE_NAME, ROCKET_TWO_NAME)));
+        Throwable exception = assertThrows(AssignRocketsException.class, () -> repository.assignRocketsToMission(mission, List.of(rocket1, rocket2)));
         assertEquals(ErrorMessageConstants.ROCKET_ALREADY_HAS_MISSION, exception.getMessage());
     }
 
@@ -227,11 +250,12 @@ class DragonRocketRepositoryTest {
     void shouldNotAssignRocketsIfOneIsInRepair() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, null);
-        createMission(repository, MissionStatus.SCHEDULED, List.of());
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
+        Mission mission = createMission(repository, MissionStatus.SCHEDULED);
 
         // when then
-        Throwable exception = assertThrows(AssignRocketsException.class, () -> repository.assignRocketsToMission(MISSION_ONE_NAME, List.of(ROCKET_ONE_NAME)));
+        Throwable exception = assertThrows(AssignRocketsException.class, () -> repository.assignRocketsToMission(mission, List.of(rocket)));
         assertEquals(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR, exception.getMessage());
     }
 
@@ -239,11 +263,14 @@ class DragonRocketRepositoryTest {
     void shouldEndMissionThatIsInProgress() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_SPACE, MISSION_ONE_NAME);
-        createMission(repository, MissionStatus.IN_PROGRESS, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_SPACE);
+        Mission mission = createMission(repository, MissionStatus.IN_PROGRESS);
+        rocket.setMission(mission);
+        mission.addRockets(List.of(rocket));
 
         // when
-        repository.endMission(MISSION_ONE_NAME);
+        repository.endMission(mission);
 
         // then
         Mission missionResult = repository.getMissions().get(MISSION_ONE_NAME);
@@ -251,45 +278,38 @@ class DragonRocketRepositoryTest {
         assertEquals(MissionStatus.ENDED, missionResult.getStatus());
         assertEquals(Collections.emptyList(), missionResult.getRockets());
         assertEquals(RocketStatus.ON_GROUND, rocketResult.getStatus());
-        assertNull(rocketResult.getMissionName());
+        assertNull(rocketResult.getMission());
     }
 
     @Test
     void shouldNotEndMissionThatIsNotInProgress() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.IN_REPAIR, MISSION_ONE_NAME);
-        createMission(repository, MissionStatus.PENDING, List.of(ROCKET_ONE_NAME));
+        Map<String, Rocket> rocketsMap = new HashMap<>();
+        Rocket rocket = createRocket(repository, rocketsMap, ROCKET_ONE_NAME, RocketStatus.IN_REPAIR);
+        Mission mission = createMission(repository, MissionStatus.PENDING);
+        rocket.setMission(mission);
+        mission.addRockets(List.of(rocket));
 
         // when then
-        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.endMission(MISSION_ONE_NAME));
+        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.endMission(mission));
         assertEquals(ErrorMessageConstants.CANNOT_END_MISSION, exception.getMessage());
     }
 
-    private void createRocket(RocketRepository repository, RocketStatus rocketStatus, String missionName) {
-        Rocket rocket = new Rocket(ROCKET_ONE_NAME);
+    private Rocket createRocket(RocketRepository repository, Map<String, Rocket> rocketsMap, String rocketName, RocketStatus rocketStatus) {
+        Rocket rocket = new Rocket(rocketName);
         rocket.setStatus(rocketStatus);
-        rocket.setMissionName(missionName);
-        Map<String, Rocket> rocketsMap = Map.of(ROCKET_ONE_NAME, rocket);
+        rocketsMap.put(rocket.getName(), rocket);
         Whitebox.setInternalState(repository, "rockets", rocketsMap);
+        return rocket;
     }
 
-    private void createMission(RocketRepository repository, MissionStatus missionStatus, List<String> rockets) {
+    private Mission createMission(RocketRepository repository, MissionStatus missionStatus) {
         Mission mission = new Mission(MISSION_ONE_NAME);
         mission.setStatus(missionStatus);
-        mission.addRockets(rockets);
-        Map<String, Mission> missionsMap = Map.of(MISSION_ONE_NAME, mission);
+        Map<String, Mission> missionsMap = new HashMap<>();
+        missionsMap.put(mission.getName(), mission);
         Whitebox.setInternalState(repository, "missions", missionsMap);
-    }
-
-    private void createTwoRockets(RocketRepository repository, RocketStatus status1, RocketStatus status2, String mission1Name, String mission2Name) {
-        Rocket rocket1 = new Rocket(ROCKET_ONE_NAME);
-        rocket1.setStatus(status1);
-        rocket1.setMissionName(mission1Name);
-        Rocket rocket2 = new Rocket(ROCKET_TWO_NAME);
-        rocket2.setStatus(status2);
-        rocket2.setMissionName(mission2Name);
-        Map<String, Rocket> rocketsMap = Map.of(ROCKET_ONE_NAME, rocket1, ROCKET_TWO_NAME, rocket2);
-        Whitebox.setInternalState(repository, "rockets", rocketsMap);
+        return mission;
     }
 }

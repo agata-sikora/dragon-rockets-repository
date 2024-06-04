@@ -8,7 +8,7 @@ import java.util.List;
 public class Mission {
     private final String name;
     private MissionStatus status = MissionStatus.SCHEDULED;
-    private final List<String> rockets = new ArrayList<>();
+    private final List<Rocket> rockets = new ArrayList<>();
 
     public Mission(String name) {
         this.name = name;
@@ -26,11 +26,11 @@ public class Mission {
         this.status = status;
     }
 
-    public List<String> getRockets() {
+    public List<Rocket> getRockets() {
         return rockets;
     }
 
-    public void addRockets(List<String> rockets) {
+    public void addRockets(List<Rocket> rockets) {
         this.rockets.addAll(rockets);
     }
 

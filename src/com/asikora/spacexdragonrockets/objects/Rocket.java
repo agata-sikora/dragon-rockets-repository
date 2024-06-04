@@ -5,7 +5,7 @@ import com.asikora.spacexdragonrockets.enums.RocketStatus;
 public class Rocket {
     private final String name;
     private RocketStatus status = RocketStatus.ON_GROUND;
-    private String missionName;
+    private Mission mission;
 
     public Rocket(String name) {
         this.name = name;
@@ -23,11 +23,11 @@ public class Rocket {
         this.status = status;
     }
 
-    public String getMissionName() {
-        return missionName;
+    public Mission getMission() {
+        return mission;
     }
 
-    public void setMissionName(String missionName) {
-        this.missionName = missionName;
+    public void setMission(Mission mission) {
+        this.mission = mission;
     }
 }

@@ -11,17 +11,17 @@ public interface RocketRepository {
 
     void addRocket(String name);
 
-    void setRocketsMission(String rocketName, String missionName);
+    void setRocketsMission(Rocket rocket, Mission mission);
 
-    void changeRocketStatus(String name, RocketStatus status);
+    void changeRocketStatus(Rocket rocket, RocketStatus status);
 
     Map<String, Rocket> getRockets();
 
-    void addMission(String name);
+    void addMission(String missionName);
 
-    void assignRocketsToMission(String missionName, List<String> rockets);
+    void assignRocketsToMission(Mission mission, List<Rocket> rockets);
 
-    void endMission(String missionName);
+    void endMission(Mission mission);
 
     Map<String, Mission> getMissions();
 
