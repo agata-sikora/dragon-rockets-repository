@@ -13,4 +13,5 @@ public class ErrorMessageConstants {
     public static final String CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR = "Cannot assign mission to rocket that is in repair";
     public static final String ROCKET_ALREADY_HAS_MISSION = "Some of the rockets already have missions assigned";
     public static final String NO_ROCKETS_TO_ASSIGN = "There are no rockets to assign";
+    public static final String CANNOT_END_MISSION = "Cannot end mission that has not started or is pending";
 }

@@ -7,10 +7,7 @@ import com.asikora.spacexdragonrockets.objects.Mission;
 import com.asikora.spacexdragonrockets.objects.Rocket;
 import com.asikora.spacexdragonrockets.repository.RocketRepository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class DragonRocketRepository implements RocketRepository {
 
@@ -115,6 +112,11 @@ public class DragonRocketRepository implements RocketRepository {
         });
         mission.setStatus(MissionStatus.IN_PROGRESS);
         mission.addRockets(rocketsList);
+    }
+
+    @Override
+    public void endMission(String missionName) {
+
     }
 
     @Override

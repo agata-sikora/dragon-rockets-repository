@@ -235,6 +235,37 @@ class DragonRocketRepositoryTest {
         assertEquals(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR, exception.getMessage());
     }
 
+    @Test
+    void shouldEndMissionThatIsInProgress() {
+        // given
+        RocketRepository repository = new DragonRocketRepository();
+        createRocket(repository, RocketStatus.IN_SPACE, MISSION_ONE_NAME);
+        createMission(repository, MissionStatus.IN_PROGRESS, List.of(ROCKET_ONE_NAME));
+
+        // when
+        repository.endMission(MISSION_ONE_NAME);
+
+        // then
+        Mission missionResult = repository.getMissions().get(MISSION_ONE_NAME);
+        Rocket rocketResult = repository.getRockets().get(ROCKET_ONE_NAME);
+        assertEquals(MissionStatus.ENDED, missionResult.getStatus());
+        assertEquals(Collections.emptyList(), missionResult.getRockets());
+        assertEquals(RocketStatus.ON_GROUND, rocketResult.getStatus());
+        assertNull(rocketResult.getMissionName());
+    }
+
+    @Test
+    void shouldNotEndMissionThatIsNotInProgress() {
+        // given
+        RocketRepository repository = new DragonRocketRepository();
+        createRocket(repository, RocketStatus.IN_REPAIR, MISSION_ONE_NAME);
+        createMission(repository, MissionStatus.PENDING, List.of(ROCKET_ONE_NAME));
+
+        // when then
+        Throwable exception = assertThrows(WrongStatusException.class, () -> repository.endMission(MISSION_ONE_NAME));
+        assertEquals(ErrorMessageConstants.CANNOT_END_MISSION, exception.getMessage());
+    }
+
     private void createRocket(RocketRepository repository, RocketStatus rocketStatus, String missionName) {
         Rocket rocket = new Rocket(ROCKET_ONE_NAME);
         rocket.setStatus(rocketStatus);

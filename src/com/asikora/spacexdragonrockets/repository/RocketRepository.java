@@ -21,6 +21,8 @@ public interface RocketRepository {
 
     void assignRocketsToMission(String missionName, List<String> rockets);
 
+    void endMission(String missionName);
+
     Map<String, Mission> getMissions();
 
     void getMissionsSummary();
