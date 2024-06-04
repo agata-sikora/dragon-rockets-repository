@@ -19,7 +19,7 @@ public interface RocketRepository {
 
     void addMission(String name);
 
-    void assignRocketsToMission(String name, List<String> rockets);
+    void assignRocketsToMission(String missionName, List<String> rockets);
 
     Map<String, Mission> getMissions();
 

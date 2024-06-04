@@ -2,13 +2,13 @@ package com.asikora.spacexdragonrockets.objects;
 
 import com.asikora.spacexdragonrockets.enums.MissionStatus;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Mission {
     private final String name;
     private MissionStatus status = MissionStatus.SCHEDULED;
-    private List<String> rockets = Collections.emptyList();
+    private final List<String> rockets = new ArrayList<>();
 
     public Mission(String name) {
         this.name = name;
@@ -30,7 +30,7 @@ public class Mission {
         return rockets;
     }
 
-    public void setRockets(List<String> rockets) {
-        this.rockets = rockets;
+    public void addRockets(List<String> rockets) {
+        this.rockets.addAll(rockets);
     }
 }

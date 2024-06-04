@@ -12,7 +12,6 @@ import org.mockito.internal.util.reflection.Whitebox;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,7 +45,7 @@ class DragonRocketRepositoryTest {
 
         // when then
         repository.addRocket(ROCKET_ONE_NAME);
-        Throwable exception = assertThrows(DuplicatedNameException.class, () -> repository.addRocket(ROCKET_ONE_NAME));
+        Throwable exception = assertThrows(WrongNameException.class, () -> repository.addRocket(ROCKET_ONE_NAME));
         assertEquals(ErrorMessageConstants.ROCKET_ALREADY_EXISTS, exception.getMessage());
     }
 
@@ -76,7 +75,7 @@ class DragonRocketRepositoryTest {
         repository.addMission(MISSION_ONE_NAME);
 
         // then
-        Throwable exception = assertThrows(DuplicatedNameException.class, () -> repository.addMission(MISSION_ONE_NAME));
+        Throwable exception = assertThrows(WrongNameException.class, () -> repository.addMission(MISSION_ONE_NAME));
         assertEquals(ErrorMessageConstants.MISSION_ALREADY_EXISTS, exception.getMessage());
     }
 
@@ -183,13 +182,15 @@ class DragonRocketRepositoryTest {
     }
 
     @Test
-    void shouldNotAssignMissionToRocketIfMissionNotExists() {
+    void shouldNotAssignMissionIfRocketIsInRepair() {
         // given
         RocketRepository repository = new DragonRocketRepository();
-        createRocket(repository, RocketStatus.ON_GROUND, null);
+        createRocket(repository, RocketStatus.IN_REPAIR, null);
+        createMission(repository, MissionStatus.SCHEDULED, Collections.emptyList());
 
         // when then
-        assertThrows(NoSuchElementException.class, () -> repository.setRocketsMission(ROCKET_ONE_NAME, MISSION_ONE_NAME));
+        Throwable exception = assertThrows(AssignMissionException.class, () -> repository.setRocketsMission(ROCKET_ONE_NAME, MISSION_ONE_NAME));
+        assertEquals(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR, exception.getMessage());
     }
 
     @Test
@@ -223,18 +224,15 @@ class DragonRocketRepositoryTest {
     }
 
     @Test
-    void shouldChangeMissionStatusToPendingIfAssignedRocketIsInRepair() {
+    void shouldNotAssignRocketsIfOneIsInRepair() {
         // given
         RocketRepository repository = new DragonRocketRepository();
         createRocket(repository, RocketStatus.IN_REPAIR, null);
         createMission(repository, MissionStatus.SCHEDULED, List.of());
 
-        // when
-        repository.assignRocketsToMission(MISSION_ONE_NAME, List.of(ROCKET_ONE_NAME));
-
-        // then
-        Mission missionResult = repository.getMissions().get(MISSION_ONE_NAME);
-        assertEquals(MissionStatus.PENDING, missionResult.getStatus());
+        // when then
+        Throwable exception = assertThrows(AssignRocketsException.class, () -> repository.assignRocketsToMission(MISSION_ONE_NAME, List.of(ROCKET_ONE_NAME)));
+        assertEquals(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR, exception.getMessage());
     }
 
     private void createRocket(RocketRepository repository, RocketStatus rocketStatus, String missionName) {
@@ -248,7 +246,7 @@ class DragonRocketRepositoryTest {
     private void createMission(RocketRepository repository, MissionStatus missionStatus, List<String> rockets) {
         Mission mission = new Mission(MISSION_ONE_NAME);
         mission.setStatus(missionStatus);
-        mission.setRockets(rockets);
+        mission.addRockets(rockets);
         Map<String, Mission> missionsMap = Map.of(MISSION_ONE_NAME, mission);
         Whitebox.setInternalState(repository, "missions", missionsMap);
     }

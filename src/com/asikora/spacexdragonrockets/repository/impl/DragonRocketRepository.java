@@ -2,9 +2,7 @@ package com.asikora.spacexdragonrockets.repository.impl;
 
 import com.asikora.spacexdragonrockets.enums.MissionStatus;
 import com.asikora.spacexdragonrockets.enums.RocketStatus;
-import com.asikora.spacexdragonrockets.exceptions.DuplicatedNameException;
-import com.asikora.spacexdragonrockets.exceptions.ErrorMessageConstants;
-import com.asikora.spacexdragonrockets.exceptions.WrongStatusException;
+import com.asikora.spacexdragonrockets.exceptions.*;
 import com.asikora.spacexdragonrockets.objects.Mission;
 import com.asikora.spacexdragonrockets.objects.Rocket;
 import com.asikora.spacexdragonrockets.repository.RocketRepository;
@@ -21,20 +19,38 @@ public class DragonRocketRepository implements RocketRepository {
 
     @Override
     public void addRocket(String name) {
+        if (name == null) {
+            throw new WrongNameException(ErrorMessageConstants.NAME_CANNOT_BE_NULL);
+        }
         if (rockets.containsKey(name)) {
-            throw new DuplicatedNameException(ErrorMessageConstants.ROCKET_ALREADY_EXISTS);
+            throw new WrongNameException(ErrorMessageConstants.ROCKET_ALREADY_EXISTS);
         }
         rockets.put(name, new Rocket(name));
     }
 
     @Override
     public void setRocketsMission(String rocketName, String missionName) {
+        if (rocketName == null || missionName == null || !rockets.containsKey(rocketName) || !missions.containsKey(missionName)) {
+            throw new NoSuchElementException();
+        }
+        Rocket rocket = rockets.get(rocketName);
+        Mission mission = missions.get(missionName);
+        if (rocket.getMissionName() != null) {
+            throw new AssignMissionException(ErrorMessageConstants.MISSION_ALREADY_ASSIGNED);
+        }
+        if (RocketStatus.IN_REPAIR.equals(rocket.getStatus())) {
+            throw new AssignMissionException(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR);
+        }
 
+        rocket.setMissionName(missionName);
+        mission.addRockets(List.of(rocketName));
+        rocket.setStatus(RocketStatus.IN_SPACE);
+        mission.setStatus(MissionStatus.IN_PROGRESS);
     }
 
     @Override
     public void changeRocketStatus(String name, RocketStatus status) {
-        if (!rockets.containsKey(name)) {
+        if (name == null || !rockets.containsKey(name)) {
             throw new NoSuchElementException();
         }
         Rocket rocket = rockets.get(name);
@@ -66,15 +82,39 @@ public class DragonRocketRepository implements RocketRepository {
 
     @Override
     public void addMission(String name) {
+        if (name == null) {
+            throw new WrongNameException(ErrorMessageConstants.NAME_CANNOT_BE_NULL);
+        }
         if (missions.containsKey(name)) {
-            throw new DuplicatedNameException(ErrorMessageConstants.MISSION_ALREADY_EXISTS);
+            throw new WrongNameException(ErrorMessageConstants.MISSION_ALREADY_EXISTS);
         }
         missions.put(name, new Mission(name));
     }
 
     @Override
-    public void assignRocketsToMission(String name, List<String> rockets) {
-
+    public void assignRocketsToMission(String missionName, List<String> rocketsList) {
+        if (missionName == null || !missions.containsKey(missionName)) {
+            throw new NoSuchElementException();
+        }
+        if (rocketsList == null || rocketsList.isEmpty()) {
+            throw new AssignRocketsException(ErrorMessageConstants.NO_ROCKETS_TO_ASSIGN);
+        }
+        Mission mission = missions.get(missionName);
+        rocketsList.forEach(rocketName -> {
+            if (rocketName == null || !rockets.containsKey(rocketName)) {
+                throw new NoSuchElementException();
+            }
+            Rocket rocket = rockets.get(rocketName);
+            if (rocket.getMissionName() != null) {
+                throw new AssignRocketsException(ErrorMessageConstants.ROCKET_ALREADY_HAS_MISSION);
+            }
+            if (RocketStatus.IN_REPAIR.equals(rocket.getStatus())) {
+                throw new AssignRocketsException(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR);
+            }
+            rocket.setStatus(RocketStatus.IN_SPACE);
+        });
+        mission.setStatus(MissionStatus.IN_PROGRESS);
+        mission.addRockets(rocketsList);
     }
 
     @Override
