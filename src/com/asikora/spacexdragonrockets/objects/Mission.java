@@ -33,4 +33,8 @@ public class Mission {
     public void addRockets(List<String> rockets) {
         this.rockets.addAll(rockets);
     }
+
+    public void deleteRockets() {
+        this.rockets.clear();
+    }
 }

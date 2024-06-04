@@ -116,7 +116,20 @@ public class DragonRocketRepository implements RocketRepository {
 
     @Override
     public void endMission(String missionName) {
-
+        if (missionName == null || !missions.containsKey(missionName)) {
+            throw new NoSuchElementException();
+        }
+        Mission mission = missions.get(missionName);
+        if (MissionStatus.PENDING.equals(mission.getStatus()) || MissionStatus.SCHEDULED.equals(mission.getStatus())) {
+            throw new WrongStatusException(ErrorMessageConstants.CANNOT_END_MISSION);
+        }
+        mission.setStatus(MissionStatus.ENDED);
+        mission.getRockets().forEach(rocketName -> {
+            Rocket rocket = rockets.get(rocketName);
+            rocket.setStatus(RocketStatus.ON_GROUND);
+            rocket.setMissionName(null);
+        });
+        mission.deleteRockets();
     }
 
     @Override
