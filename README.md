@@ -1,0 +1,11 @@
+This is a SpaceX Dragon Rockets Repository - it can be used to execute different operations on rockets and missions. The available operations are:
+- adding a new rocket - it requires to specify the name of a rocket
+- adding a new mission - it requires to specify the name of the mission
+- changing rocket status - available statuses are:
+  - "On ground" - it is possible to change to this status if rocket has no mission assigned and it was previously "In repair"
+  - "In space" - it is possible to change to this status if rocket has a mission assigned and it was previously "In repair"
+  - "In repair" - if the rocjet has a mission assigned the status of the mission will change to "Pending"
+- assigning mission to rocket - rocket can have only one mission
+- assigning rockets to mission - a mission can have more than one rocket assigned
+- ending the mission - this way we change mission's status to "Ended" and unassign all the rockets that it previously had
+- getting summary of missions - the missions are displayd in the console ordered by number of rockets assigned, if the number of rockets is the same they are ordered alphabetically in descending order
