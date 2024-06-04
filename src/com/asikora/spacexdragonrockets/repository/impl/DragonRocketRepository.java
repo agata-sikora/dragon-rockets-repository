@@ -145,6 +145,14 @@ public class DragonRocketRepository implements RocketRepository {
 
     @Override
     public void getMissionsSummary() {
+        List<Mission> sortedMissions = missions.values()
+                .stream()
+                .sorted(Comparator.comparing((Mission m) ->
+                        m.getRockets().size())
+                        .thenComparing(Mission::getName)
+                        .reversed())
+                .toList();
 
+        sortedMissions.forEach(mission -> System.out.println(mission.toString()));
     }
 }

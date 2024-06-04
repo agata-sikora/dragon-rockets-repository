@@ -4,6 +4,7 @@ import com.asikora.spacexdragonrockets.enums.MissionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class Mission {
     private final String name;
@@ -36,5 +37,17 @@ public class Mission {
 
     public void deleteRockets() {
         this.rockets.clear();
+    }
+
+    @Override
+    public String toString() {
+        String missionData = getName() + " - " + getStatus().toString() + " - Dragons: " + getRockets().size();
+        StringJoiner joiner = new StringJoiner("\n");
+        joiner.add(missionData);
+        getRockets().forEach(rocket -> {
+            String rocketData = " - " + rocket.getName() + " - " + rocket.getStatus().toString();
+            joiner.add(rocketData);
+        });
+        return joiner.toString();
     }
 }
