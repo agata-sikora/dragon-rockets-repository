@@ -236,7 +236,10 @@ class DragonRocketRepositoryTest {
         Mission missionResult = repository.getMissions().get(MISSION_ONE_NAME);
         assertEquals(List.of(rocket1, rocket2), missionResult.getRockets());
         assertEquals(MissionStatus.IN_PROGRESS, missionResult.getStatus());
-        rocketsResult.values().forEach(rocket -> assertEquals(RocketStatus.IN_SPACE, rocket.getStatus()));
+        rocketsResult.values().forEach(rocket -> {
+            assertEquals(RocketStatus.IN_SPACE, rocket.getStatus());
+            assertEquals(mission, rocket.getMission());
+        });
     }
 
     @Test

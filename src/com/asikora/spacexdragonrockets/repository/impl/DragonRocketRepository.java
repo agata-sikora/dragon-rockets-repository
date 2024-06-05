@@ -112,6 +112,7 @@ public class DragonRocketRepository implements RocketRepository {
             if (RocketStatus.IN_REPAIR.equals(rocket.getStatus())) {
                 throw new AssignRocketsException(ErrorMessageConstants.CANNOT_ASSIGN_MISSION_TO_ROCKET_IN_REPAIR);
             }
+            rocket.setMission(mission);
             rocket.setStatus(RocketStatus.IN_SPACE);
             rockets.put(rocket.getName(), rocket);
         });
